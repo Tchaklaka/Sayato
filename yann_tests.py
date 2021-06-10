@@ -17,6 +17,7 @@ import requests
 
 pp = pprint.PrettyPrinter(indent=4, depth=2, compact=True)
 
+# Paramètres globaux
 layers = {
     "Nuages": "cloud_new",
     "Précipitations": "precipitation_new",
@@ -24,21 +25,28 @@ layers = {
     "Vent": "wind_new",
     "Température": "temp_new"
 }
-layer = "temp_new"
+init_layer = "temp_new"
 scatter_mapbox_marker_color = "yellow"
+scatter_mapbox_marker_color_selected = "red"
 
+# URLs des APIs
 one_call_api_base_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&appid={}&units=metric"
 weather_tile_api_base_url = "https://tile.openweathermap.org/map/{}/{}/{}/{}.png?appid={}"
 
+# Ressource : liste des capitales mondiales avec leurs coordonnées
 capitals = pd.read_csv("concap.csv").dropna().reset_index(drop=True)
 
 def get_api_key():
+    """Obtention de la clé API d'OpenWeather"""
+
     config = configparser.ConfigParser()
     config.read("config.ini")
 
     return config['openweathermap']['api']
 
 def get_current_weather_results(weather_dict):
+    """Extraction des données currentes du dictionnaire des résultats météo global"""
+
     current = pd.Series(weather_dict['current'])
     current['dt'] = dt.datetime.fromtimestamp(current['dt'])
     current['sunrise'] = dt.datetime.fromtimestamp(current['sunrise'])
@@ -50,6 +58,8 @@ def get_current_weather_results(weather_dict):
     return current
 
 def get_hourly_weather_results(weather_dict):
+    """Extraction des données horaires prévisionnelles du dictionnaire des résultats météo global"""
+
     hourly = pd.DataFrame(weather_dict['hourly'])
     hourly.loc[:,'weather_condition'] = hourly['weather'].map(lambda ls: ls[0]['main'])
     hourly.loc[:,'weather_icon'] = hourly['weather'].map(lambda ls: ls[0]['icon'])
@@ -59,18 +69,15 @@ def get_hourly_weather_results(weather_dict):
     return hourly
 
 def get_weather_results(lat, lon):
-    # , previous_weather_dict
+    """Obtention des résultats météo currents et prévisionnels"""
+    
     api_key = get_api_key()
     url = one_call_api_base_url.format(lat, lon, api_key)
     response = json.loads(requests.get(url).text)
     if response.get('cod') and response.get('cod') == 429:
-        # if previous_weather_dict:
-        #     weather_dict = previous_weather_dict
-        # else:
         raise Exception("Compte OpenWeather bloqué et pas de dictionnaire par défaut")
     else:
         weather_dict = response
-    # weather_dict['timezone']
     current = get_current_weather_results(weather_dict)
     hourly = get_hourly_weather_results(weather_dict)
 
@@ -78,8 +85,22 @@ def get_weather_results(lat, lon):
 
 # https://plotly.com/python/mapbox-layers/
 
-def load_tile_map(fig, layer):
-    weather_tile_url = weather_tile_api_base_url.format(layer, "{z}", "{x}", "{y}", get_api_key())
+def color_capital_map(fig, capitale_data):
+    """Colorie les points de la carte en différenciant celui correspondant à la capitale sélectionnée"""
+
+    capitale_data = json.loads(capitale_data)
+    colors = [scatter_mapbox_marker_color] * capitals.shape[0]
+    capital_names = capitals.set_index('CapitalName').index
+    clicked_capital_idx = capital_names.get_loc(capitale_data['CapitalName'])
+    colors[clicked_capital_idx] = scatter_mapbox_marker_color_selected
+    fig.update_traces(overwrite=True, marker={"color": colors})
+
+    return fig
+
+def load_tile_map(fig, selected_layer):
+    """Charge les couches cartographiques de la carte, en fonction de l'information demandée par l'utilisateur"""
+
+    weather_tile_url = weather_tile_api_base_url.format(selected_layer, "{z}", "{x}", "{y}", get_api_key())
     fig.update_layout(
         mapbox_style="white-bg",
         mapbox_layers=[
@@ -102,7 +123,9 @@ def load_tile_map(fig, layer):
 
     return fig
 
-def create_map(layer, capitals_df):
+def create_map(capitals_df):
+    """Création de la carte : couche ESRI, couche météo et points correspondants aux villes"""
+
     fig = px.scatter_mapbox(
         capitals_df,
         lat="CapitalLatitude",
@@ -126,12 +149,13 @@ def create_map(layer, capitals_df):
         <br />
         <i>Continent:</i> %{customdata[2]}
     """)
-    load_tile_map(fig, layer)
+    load_tile_map(fig, init_layer)
     # possibilité d'utiliser USGSImageryTopo
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
     return fig
 
+# Serveur
 app = dash.Dash(
     __name__,
     assets_folder="assets",
@@ -147,6 +171,7 @@ app = dash.Dash(
     update_title="Rafraîchissement..."
 )
 
+# Mise en page
 app.layout = html.Div([
     html.Div([
         html.Div([
@@ -169,7 +194,7 @@ app.layout = html.Div([
                                     html.Div([
                                         dcc.Dropdown(
                                             options=[{'label': key, 'value': val} for key, val in layers.items()],
-                                            value=layer,
+                                            value=init_layer,
                                             clearable=False,
                                             id="layers-dropdown"
                                         )
@@ -183,7 +208,7 @@ app.layout = html.Div([
                 html.Div([
                     dcc.Graph(
                         id='mapmonde',
-                        figure=create_map(layer, capitals),
+                        figure=create_map(capitals),
                         className="col-12 aspect-ratio-box-inside"
                     )
                 ], className="row aspect-ratio-box bg-info"),
@@ -194,6 +219,7 @@ app.layout = html.Div([
                             html.Div([
                                 html.H2("Test")
                             ], className='row'),
+
                             html.Div([
                                 html.Pre(
                                     id='test',
@@ -240,6 +266,8 @@ app.layout = html.Div([
     ]
 )
 def test_interactions(capitale_data, current, hourly):
+    """Affichage des données sauvegardées sur le navigateur client à l'issu des différents callbacks"""
+
     capitale_data = json.loads(capitale_data, object_hook=json_util.object_hook)
     current = json.loads(current, object_hook=json_util.object_hook)
     hourly = json.loads(hourly, object_hook=json_util.object_hook)
@@ -262,6 +290,8 @@ def test_interactions(capitale_data, current, hourly):
     ]
 )
 def stream_data(n_intervals, capitale_data):
+    """Appels API récurrents pour obtenir les dernières données météo ponctuelles"""
+
     capitale_data = json.loads(capitale_data)
     current, hourly = get_weather_results(
         capitale_data['CapitalLatitude'],
@@ -276,7 +306,9 @@ def stream_data(n_intervals, capitale_data):
     Output('capitale', 'data'),
     Input('mapmonde', 'clickData')
 )
-def display_click_data(capitale_data):
+def store_click_data(capitale_data):
+    """Callback intermédiaire sauvegardant la ville cliquée sur le navigateur du client"""
+
     if capitale_data:
         capital_name = capitale_data['points'][0]['hovertext']
         capitale_data = capitals.set_index('CapitalName').loc[capital_name,:].to_dict()
@@ -296,15 +328,10 @@ def display_click_data(capitale_data):
     State('mapmonde', 'figure')
 )
 def update_map(capitale_data, _, selected_layer, fig_json):
+    """Mise à jour de la carte : coloration de la ville cliquée, et mise à jour de la couche météo selon les choix de l'utilisateur et un compteur de minutes"""
+
     fig = go.Figure(fig_json)
-
-    capitale_data = json.loads(capitale_data)
-    colors = [scatter_mapbox_marker_color] * capitals.shape[0]
-    capital_names = capitals.set_index('CapitalName').index
-    clicked_capital_idx = capital_names.get_loc(capitale_data['CapitalName'])
-    colors[clicked_capital_idx] = "red"
-    fig.update_traces(overwrite=True, marker={"color": colors})
-
+    color_capital_map(fig, capitale_data)
     load_tile_map(fig, selected_layer)
 
     return fig
