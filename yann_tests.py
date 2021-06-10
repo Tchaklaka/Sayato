@@ -147,160 +147,89 @@ app = dash.Dash(
     update_title="Rafraîchissement..."
 )
 
-app.layout = html.Div(
-    [
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.Div(
-                            [
+app.layout = html.Div([
+    html.Div([
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.H1("Bulletin météo de SAYATO")
+                    ], className='col-9 bg-light'),
+                    
+                    html.Div([
+                        html.Div([
+                            html.Div([
                                 html.Div([
-                                        html.Div(
-                                            [
-                                                html.H1("Bulletin météo de SAYATO")
-                                            ],
-                                            className='col-9 bg-light'
-                                        ),
-                                        
-                                        html.Div(
-                                            [
-                                                # html.Div(
-                                                #     [
-                                                        html.Div(
-                                                            [
-                                                                html.Div(
-                                                                    [
-                                                                        # html.Div(
-                                                                        #     [
-                                                                                html.Div(
-                                                                                    [
-                                                                                        html.Div(
-                                                                                            [
-                                                                                                html.Label("Carte", className="h4")
-                                                                                            ],
-                                                                                            className='col-12'
-                                                                                        )
-                                                                                    ],
-                                                                                    className='row'
-                                                                                ),
+                                    html.Div([
+                                        html.Label("Carte", className="h4")
+                                    ], className='col-12')
+                                ], className='row'),
 
-                                                                                html.Div(
-                                                                                    [
-                                                                                        html.Div(
-                                                                                            [
-                                                                                                dcc.Dropdown(
-                                                                                                    options=[{'label': key, 'value': val} for key, val in layers.items()],
-                                                                                                    value=layer,
-                                                                                                    clearable=False,
-                                                                                                    id="layers-dropdown"
-                                                                                                )
-                                                                                            ],
-                                                                                            className='col-12'
-                                                                                        )
-                                                                                    ],
-                                                                                    className='row'
-                                                                                )
-                                                                        #     ],
-                                                                        #     className='container'
-                                                                        # )
-                                                                    ],
-                                                                    className='col-12'
-                                                                )
-                                                            ],
-                                                            className='row'
-                                                        )
-                                                #     ],
-                                                #     className='container'
-                                                # )
-                                            ],
-                                            className='col-3 bg-info'
+                                html.Div([
+                                    html.Div([
+                                        dcc.Dropdown(
+                                            options=[{'label': key, 'value': val} for key, val in layers.items()],
+                                            value=layer,
+                                            clearable=False,
+                                            id="layers-dropdown"
                                         )
-                                    ],
-                                    className='row'
-                                ),
+                                    ], className='col-12')
+                                ], className='row')
+                            ], className='col-12')
+                        ], className='row')
+                    ], className='col-3 bg-info')
+                ], className='row'),
 
-                                html.Div(
-                                    [
-                                        dcc.Graph(
-                                            id='mapmonde',
-                                            figure=create_map(layer, capitals),
-                                            className="col-12 aspect-ratio-box-inside"
-                                        ),
-                                    ],
-                                    className="row aspect-ratio-box bg-info"
-                                ),
-                                
-                                html.Div(
-                                    [
-                                        html.Div(
-                                            [
-                                                html.Div(
-                                                    [
-                                                        html.Div(
-                                                            [
-                                                                html.H2("Test")
-                                                            ],
-                                                            className='row'
-                                                        ),
-                                                        html.Div(
-                                                            [
-                                                                html.Pre(
-                                                                    id='test',
-                                                                    className="pre",
-                                                                    style={"overflowX": "scroll"}
-                                                                )
-                                                            ],
-                                                            className='row'
-                                                        )
-                                                    ],
-                                                    className='container'
-                                                )
-                                            ], 
-                                            className='col-6'
-                                        ),
-                                        html.Div(
-                                            [],
-                                            className='col-6'
-                                        )
-                                    ], 
-                                    className='row bg-light'
-                                )
-                            ],
-                            className='container'
-                        )
-                    ],
-                    className="col-12"
-                )
-            ],
-            className="row"
+                html.Div([
+                    dcc.Graph(
+                        id='mapmonde',
+                        figure=create_map(layer, capitals),
+                        className="col-12 aspect-ratio-box-inside"
+                    )
+                ], className="row aspect-ratio-box bg-info"),
+                
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.H2("Test")
+                            ], className='row'),
+                            html.Div([
+                                html.Pre(
+                                    id='test',
+                                    className="pre",
+                                    style={"overflowX": "scroll"}
+                            )], className='row')
+                        ], className='container')
+                    ], className='col-6'),
+
+                    html.Div([
+                    ], className='col-6')
+                ], className='row bg-light')
+            ], className='container')
+        ], className="col-12")
+    ], className="row"),
+
+    html.Div([
+        dcc.Interval(
+            id='interval-component-60s',
+            interval=60 * 1000,
+            n_intervals=0
         ),
 
-        html.Div(
-            [
-                dcc.Interval(
-                    id='interval-component-60s',
-                    interval=60 * 1000,
-                    n_intervals=0
-                ),
-
-                dcc.Interval(
-                    id='interval-component-10s',
-                    interval=10 * 1000,
-                    n_intervals=0
-                ),
-                
-                dcc.Store(id='capitale'),
-                
-                dcc.Store(id='current'),
-                
-                dcc.Store(id='hourly')
-            ],
-            className='row'
-        )
-    ],
-    className="container"
-)
+        dcc.Interval(
+            id='interval-component-10s',
+            interval=10 * 1000,
+            n_intervals=0
+        ),
+        
+        dcc.Store(id='capitale'),
+        
+        dcc.Store(id='current'),
+        
+        dcc.Store(id='hourly')
+    ], className='row')
+], className="container")
 
 @app.callback(
     Output('test', 'children'),
