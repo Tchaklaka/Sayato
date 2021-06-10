@@ -114,62 +114,17 @@ import pandas as pd
 df = pd.read_csv("data_test/hourly.csv",index_col=0)
 df.head()
 
-# %%
-fig = go.Figure([go.Scatter(x=df['dt'], y=df['temp',"feels_like"])])
-fig.show()
 
-# %%
-fig = go.Figure(go.Scatter(
-    x = df['dt'],
-    y = df['temp'])
-)
-
-fig.update_xaxes(
-    rangeslider_visible=True,
-    tickformatstops = [
-        dict(dtickrange=[None, 1000], value="%H:%M:%S.%L ms"),
-        dict(dtickrange=[1000, 60000], value="%H:%M:%S s"),
-        dict(dtickrange=[60000, 3600000], value="%H:%M m"),
-        dict(dtickrange=[3600000, 86400000], value="%H:%M h"),
-        dict(dtickrange=[86400000, 604800000], value="%e. %b d"),
-        dict(dtickrange=[604800000, "M1"], value="%e. %b w"),
-        dict(dtickrange=["M1", "M12"], value="%b '%y M"),
-        dict(dtickrange=["M12", None], value="%Y Y")
-    ]
-)
-
-fig.show()
-# %%
-fig = px.line(df, x='dt', y='temp', title='Time Series with Range Slider and Selectors')
-
-fig.update_xaxes(
-    rangeslider_visible=True,
-    rangeselector=dict(
-        buttons=list([
-            dict(count=1, label="J", step="day", stepmode="todate"),
-            dict(count=3, label="J+1", step="day", stepmode="backward"),
-            dict(count=1, label="YTD", step="year", stepmode="todate"),
-            dict(count=1, label="1y", step="year", stepmode="backward"),
-            dict(step="all")
-        ])
-    )
-)
-fig.show()
 # %%
 import re
 from plotly.subplots import make_subplots
-for i, row in enumerate(df["dt"]):
-    p = re.compile(" 00:00:00")
-    datetime = p.split(df["dt"][i])[0]
-    df.iloc[i, 1] = datetime
 
 fig = make_subplots(
-    rows=3, cols=1,
+    rows=2, cols=1,
     shared_xaxes=True,
     vertical_spacing=0.03,
     specs=[[{"type": "table"}],
-           [{"type": "scatter"}],
-           [{"type": "scatter"}]]
+          [{"secondary_y": True}]]
 )
 
 fig.add_trace(
@@ -179,7 +134,7 @@ fig.add_trace(
         mode="lines",
         name="température"
     ),
-    row=3, col=1
+    row=2, col=1,secondary_y=False
 )
 
 fig.add_trace(
@@ -189,7 +144,7 @@ fig.add_trace(
         mode="lines",
         name="ressenti"
     ),
-    row=2, col=1
+    row=2, col=1,secondary_y=True
 )
 
 fig.add_trace(
@@ -200,19 +155,50 @@ fig.add_trace(
             "wind_speed","wind_deg","wind_gust","pop",
             "weather_condition","weather_icon"],
             font=dict(size=10),
+            line_color='darkslategray',
+            fill_color='paleturquoise',
             align="left"
         ),
         cells=dict(
-            values=[df[k].tolist() for k in df.columns[1:]],
+            values=[df[k].tolist() for k in df.columns[0:]],
+            line_color='darkslategray',
+            fill_color='lavender',
             align = "left")
     ),
     row=1, col=1
 )
 fig.update_layout(
-    height=800,
-    showlegend=False,
+    height=900,
+    width=900,
+    showlegend=True,
     title_text="Température",
 )
 
+# Set x-axis title
+fig.update_xaxes(title_text="Date")
+
+# Set y-axes titles
+fig.update_yaxes(title_text="Degre °C", secondary_y=False)
+fig.update_yaxes(title_text="Degre °C", secondary_y=True)
+
 fig.show()
+# %%
+import plotly.graph_objects as go
+
+fig = go.Figure()
+
+fig = go.Figure(go.Indicator(
+    mode = "gauge+number",
+    value = df.loc[(df["dt"]=='2021-06-10 09:00:00'),'wind_speed'].values[0],
+    title = {'text': "Speed km/h"},
+    domain = {'x': [0, 1], 'y': [0, 1]}
+))
+
+fig.show()
+# %%
+from datetime import datetime
+from time import strftime
+df.loc[(df["dt"]=='2021-06-10 09:00:00'),'feels_like']
+#datetime.now().isoformat(sep=' ',timespec='seconds')
+#df["dt"]
 # %%
