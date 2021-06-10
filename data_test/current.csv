@@ -1,0 +1,16 @@
+,0
+dt,2021-06-10 09:33:56
+sunrise,2021-06-10 05:47:26
+sunset,2021-06-10 21:53:03
+temp,19.07
+feels_like,18.65
+pressure,1022
+humidity,62
+dew_point,11.63
+uvi,3.04
+clouds,0
+visibility,10000
+wind_speed,1.44
+wind_deg,38
+wind_gust,1.32
+weather,"[{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}]"
