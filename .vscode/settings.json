@@ -1,7 +1,0 @@
-{
-    "jupyter.jupyterServerType": "local",
-    "python.pythonPath": "c:\\Users\\yann.feat\\Box\\Dossier Personnel de Yann FEAT\\Cours\\Architecture logicielle\\projet\\venv\\Scripts\\python.exe",
-    "python.linting.mypyEnabled": false,
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
-}
