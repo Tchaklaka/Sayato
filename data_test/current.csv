@@ -13,4 +13,5 @@ visibility,10000
 wind_speed,1.44
 wind_deg,38
 wind_gust,1.32
-weather,"[{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}]"
+weather_condition,Clear
+weather_icon,01d

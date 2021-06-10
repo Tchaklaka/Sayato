@@ -16,7 +16,6 @@ base_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&appid=
 #%%
 
 capitals = pd.read_csv("concap.csv").dropna()
-capitals.set_index('CapitalName', inplace=True)
 
 paris = capitals.loc['Paris',:]
 lat = paris['CapitalLatitude']
@@ -32,6 +31,7 @@ def get_api_key():
     return config['openweathermap']['api']
 
 def get_weather_results(lat, lon):
+
     api_key = get_api_key()
     url = base_url.format(lat, lon, api_key)
     response = requests.get(url)
@@ -47,6 +47,9 @@ current = pd.Series(data['current'])
 current['dt'] = dt.datetime.fromtimestamp(current['dt'])
 current['sunrise'] = dt.datetime.fromtimestamp(current['sunrise'])
 current['sunset'] = dt.datetime.fromtimestamp(current['sunset'])
+current['weather_condition'] = current['weather'][0]['main']
+current['weather_icon'] = current['weather'][0]['icon']
+current.drop(['weather'], inplace=True)
 current
 
 #%%
@@ -57,7 +60,6 @@ hourly.loc[:,'weather_icon'] = hourly['weather'].map(lambda ls: ls[0]['icon'])
 hourly.drop(columns=['weather', 'rain'], inplace=True)
 hourly.loc[:,'dt'] = hourly['dt'].map(dt.datetime.fromtimestamp)
 hourly.head()
-
 
 #%%
 
@@ -71,7 +73,7 @@ layers = ["clouds_new", "precipitation_new", "pressure_new", "wind_new", "temp_n
 weather_tile_url = weather_tile_base_url.format(layers[-1], "{z}", "{x}", "{y}", get_api_key())
 
 fig = px.scatter_mapbox(
-    capitals.reset_index(),
+    capitals,
     lat="CapitalLatitude",
     lon="CapitalLongitude",
     hover_name="CapitalName",
