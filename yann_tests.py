@@ -1,30 +1,36 @@
 # coding: utf-8
 
-#%%
-
-from threading import currentThread
-import requests
 import json
 import datetime as dt
 import pandas as pd
 import pprint
 import configparser
+from bson import json_util
+
+import plotly.express as px
+import plotly.graph_objects as go
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output, State
+import requests
 
 pp = pprint.PrettyPrinter(indent=4, depth=2, compact=True)
 
-base_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&appid={}&units=metric"
+layers = {
+    "Nuages": "cloud_new",
+    "Précipitations": "precipitation_new",
+    "Pression": "pressure_new",
+    "Vent": "wind_new",
+    "Température": "temp_new"
+}
+layer = "temp_new"
+scatter_mapbox_marker_color = "yellow"
 
-#%%
+one_call_api_base_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&appid={}&units=metric"
+weather_tile_api_base_url = "https://tile.openweathermap.org/map/{}/{}/{}/{}.png?appid={}"
 
-capitals = pd.read_csv("concap.csv").dropna()
-
-paris = capitals.set_index('CapitalName').loc['Paris',:]
-lat = paris['CapitalLatitude']
-lon = paris['CapitalLongitude']
-
-capitals.head()
-
-#%%
+capitals = pd.read_csv("concap.csv").dropna().reset_index(drop=True)
 
 def get_api_key():
     config = configparser.ConfigParser()
@@ -55,7 +61,7 @@ def get_hourly_weather_results(weather_dict):
 def get_weather_results(lat, lon):
     # , previous_weather_dict
     api_key = get_api_key()
-    url = base_url.format(lat, lon, api_key)
+    url = one_call_api_base_url.format(lat, lon, api_key)
     response = json.loads(requests.get(url).text)
     if response.get('cod') and response.get('cod') == 429:
         # if previous_weather_dict:
@@ -70,38 +76,17 @@ def get_weather_results(lat, lon):
 
     return current, hourly
 
-current, hourly = get_weather_results(lat, lon)
-
-pp.pprint(current)
-hourly.head()
-
-#%%
-
 # https://plotly.com/python/mapbox-layers/
 
-import plotly.express as px
-
-weather_tile_base_url = "https://tile.openweathermap.org/map/{}/{}/{}/{}.png?appid={}"
-
-def update_map(layer, capitals_df):
-    weather_tile_url = weather_tile_base_url.format(layer, "{z}", "{x}", "{y}", get_api_key())
-    fig = px.scatter_mapbox(
-        capitals_df,
-        lat="CapitalLatitude",
-        lon="CapitalLongitude",
-        hover_name="CapitalName",
-        hover_data=["CountryName", "ContinentName"],
-        color_discrete_sequence=["purple"],
-        zoom=1,
-        height=300
-    )
+def load_tile_map(fig, layer):
+    weather_tile_url = weather_tile_api_base_url.format(layer, "{z}", "{x}", "{y}", get_api_key())
     fig.update_layout(
         mapbox_style="white-bg",
         mapbox_layers=[
             {
                 "below": "traces",
                 "sourcetype": "raster",
-                "sourceattribution": "United States Geological Survey",
+                "sourceattribution": "ESRI",
                 "source": [
                     "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
                 ]
@@ -114,63 +99,208 @@ def update_map(layer, capitals_df):
             }
         ]
     )
+
+    return fig
+
+def create_map(layer, capitals_df):
+    fig = px.scatter_mapbox(
+        capitals_df,
+        lat="CapitalLatitude",
+        lon="CapitalLongitude",
+        hover_name="CapitalName",
+        hover_data={
+            "CapitalName": True,
+            "CountryName": True,
+            "ContinentName": True,
+            "CapitalLatitude": False,
+            "CapitalLongitude": False
+        },
+        color_discrete_sequence=[scatter_mapbox_marker_color] * capitals_df.shape[0],
+        zoom=1,
+        height=600
+    )
+    fig.update_traces(hovertemplate="""
+        <b>%{customdata[0]}</b>
+        <br />
+        <i>Country:</i> %{customdata[1]}
+        <br />
+        <i>Continent:</i> %{customdata[2]}
+    """)
+    load_tile_map(fig, layer)
     # possibilité d'utiliser USGSImageryTopo
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
     return fig
 
-layers = ["clouds_new", "precipitation_new", "pressure_new", "wind_new", "temp_new"]
+app = dash.Dash(
+    __name__,
+    assets_folder="assets",
+    external_stylesheets=[
+        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    ],
+    external_scripts=[
+        "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js",
+        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    ],
+    title="Météo SAYATO",
+    update_title="Rafraîchissement..."
+)
 
-fig = update_map(layers[-1], capitals)
-# fig.show()
+app.layout = html.Div(
+    [
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Div([
+                                        html.Div(
+                                            [
+                                                html.H1("Bulletin météo de SAYATO")
+                                            ],
+                                            className='col-9 bg-light'
+                                        ),
+                                        
+                                        html.Div(
+                                            [
+                                                # html.Div(
+                                                #     [
+                                                        html.Div(
+                                                            [
+                                                                html.Div(
+                                                                    [
+                                                                        # html.Div(
+                                                                        #     [
+                                                                                html.Div(
+                                                                                    [
+                                                                                        html.Div(
+                                                                                            [
+                                                                                                html.Label("Carte", className="h4")
+                                                                                            ],
+                                                                                            className='col-12'
+                                                                                        )
+                                                                                    ],
+                                                                                    className='row'
+                                                                                ),
 
-#%%
+                                                                                html.Div(
+                                                                                    [
+                                                                                        html.Div(
+                                                                                            [
+                                                                                                dcc.Dropdown(
+                                                                                                    options=[{'label': key, 'value': val} for key, val in layers.items()],
+                                                                                                    value=layer,
+                                                                                                    clearable=False,
+                                                                                                    id="layers-dropdown"
+                                                                                                )
+                                                                                            ],
+                                                                                            className='col-12'
+                                                                                        )
+                                                                                    ],
+                                                                                    className='row'
+                                                                                )
+                                                                        #     ],
+                                                                        #     className='container'
+                                                                        # )
+                                                                    ],
+                                                                    className='col-12'
+                                                                )
+                                                            ],
+                                                            className='row'
+                                                        )
+                                                #     ],
+                                                #     className='container'
+                                                # )
+                                            ],
+                                            className='col-3 bg-info'
+                                        )
+                                    ],
+                                    className='row'
+                                ),
 
-from bson import json_util
+                                html.Div(
+                                    [
+                                        dcc.Graph(
+                                            id='mapmonde',
+                                            figure=create_map(layer, capitals),
+                                            className="col-12 aspect-ratio-box-inside"
+                                        ),
+                                    ],
+                                    className="row aspect-ratio-box bg-info"
+                                ),
+                                
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            [
+                                                html.Div(
+                                                    [
+                                                        html.Div(
+                                                            [
+                                                                html.H2("Test")
+                                                            ],
+                                                            className='row'
+                                                        ),
+                                                        html.Div(
+                                                            [
+                                                                html.Pre(
+                                                                    id='test',
+                                                                    className="pre",
+                                                                    style={"overflowX": "scroll"}
+                                                                )
+                                                            ],
+                                                            className='row'
+                                                        )
+                                                    ],
+                                                    className='container'
+                                                )
+                                            ], 
+                                            className='col-6'
+                                        ),
+                                        html.Div(
+                                            [],
+                                            className='col-6'
+                                        )
+                                    ], 
+                                    className='row bg-light'
+                                )
+                            ],
+                            className='container'
+                        )
+                    ],
+                    className="col-12"
+                )
+            ],
+            className="row"
+        ),
 
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
+        html.Div(
+            [
+                dcc.Interval(
+                    id='interval-component-60s',
+                    interval=60 * 1000,
+                    n_intervals=0
+                ),
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
-
-app.layout = html.Div([
-    dcc.Graph(
-        id='mapmonde',
-        figure=fig
-    ),
-
-    dcc.Interval(
-        id='interval-component',
-        interval=10 * 1000, # in milliseconds
-        n_intervals=0
-    ),
-    
-    dcc.Store(id='capitale'),
-    
-    dcc.Store(id='current'),
-    
-    dcc.Store(id='hourly'),
-    
-    html.Div(className='row', children=[
-        html.Div([
-            dcc.Markdown("""
-                **Test**
-            """),
-            html.Pre(id='test', style=styles['pre']),
-        ], className='three columns')
-    ]),
-])
+                dcc.Interval(
+                    id='interval-component-10s',
+                    interval=10 * 1000,
+                    n_intervals=0
+                ),
+                
+                dcc.Store(id='capitale'),
+                
+                dcc.Store(id='current'),
+                
+                dcc.Store(id='hourly')
+            ],
+            className='row'
+        )
+    ],
+    className="container"
+)
 
 @app.callback(
     Output('test', 'children'),
@@ -198,7 +328,7 @@ def test_interactions(capitale_data, current, hourly):
         Output('hourly', 'data')
     ],
     [
-        Input('interval-component', 'n_intervals'),
+        Input('interval-component-10s', 'n_intervals'),
         Input('capitale', 'data')
     ]
 )
@@ -227,8 +357,28 @@ def display_click_data(capitale_data):
 
     return json.dumps(capitale_data)
 
+@app.callback(
+    Output('mapmonde', 'figure'),
+    [
+        Input('capitale', 'data'),
+        Input('interval-component-60s', 'n_intervals'),
+        Input('layers-dropdown', 'value')
+    ],
+    State('mapmonde', 'figure')
+)
+def update_map(capitale_data, _, selected_layer, fig_json):
+    fig = go.Figure(fig_json)
+
+    capitale_data = json.loads(capitale_data)
+    colors = [scatter_mapbox_marker_color] * capitals.shape[0]
+    capital_names = capitals.set_index('CapitalName').index
+    clicked_capital_idx = capital_names.get_loc(capitale_data['CapitalName'])
+    colors[clicked_capital_idx] = "red"
+    fig.update_traces(overwrite=True, marker={"color": colors})
+
+    load_tile_map(fig, selected_layer)
+
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-#%%
