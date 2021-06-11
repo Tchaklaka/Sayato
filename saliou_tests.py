@@ -301,23 +301,61 @@ def indicateur(hourly):
     df = json.loads(hourly, object_hook=json_util.object_hook)
     df=pd.DataFrame(df)
 
-    fig = go.Figure(go.Indicator(
-        mode = "number",
-        number = {'prefix': "Km/h "},
-        value = df.loc[(df["dt"]=='2021-06-11T15:00:00.000Z'),'wind_speed'].values[0],
-        title = {'text': "Vistesse du vent"},
-        domain = {'x': [0, 0.5], 'y': [0, 0.5]}
-    )),
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        number = {'suffix': "%"},
-        value = df.loc[(df["dt"]=='2021-06-11T15:00:00.000Z'),'humidity'].values[0],
-        title = {'text': "Humidité"},
-        domain = {'x': [0.5, 1], 'y': [0.5, 1]}
-    ))
-    return fig
+    fig = go.Figure()
 
+    fig.add_trace(go.Indicator(
+        mode = "gauge+number",
+        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'humidity'].values[0],
+        number = {'suffix': "%"},
+        title = {'text': "Humidité"},
+        gauge = {
+            'axis': {'range': [None,100]}},
+        domain = {'row': 0, 'column': 0}))
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'temp'].values[0],
+        title = {'text': "Température actuelle"},
+        number = {'suffix': "°C"},
+        #domain = {'x': [0.05, 0.5], 'y': [0.15, 0.35]}))
+        domain = {'row': 1, 'column': 0}))
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'wind_speed'].values[0],
+        number = {'suffix': " Km/h"},
+        title = {'text': "Vitesse du vent"},
+        domain = {'row': 0, 'column': 1}))
+
+    fig.add_trace(go.Indicator(
+         mode = "number+delta",
+        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'temp'].values[0],
+        title = {'text': "Ressenti"},
+        number = {'suffix': "°C"},
+        domain = {'row': 1, 'column': 1}))
     
+    # Add images
+    fig.add_layout_image(
+            dict(
+                source="assets/favicon.io",
+                xref="x",
+                yref="y",
+                x=0,
+                y=3,
+                sizex=2,
+                sizey=2,
+                sizing="stretch",
+                opacity=0.5,
+                layer="below")
+    )
+
+    fig.update_layout(
+        grid = {'rows': 2, 'columns': 2, 'pattern': "independent"},
+        template = {'data' : {'indicator': [{
+            'title': {'text': "Speed"},
+            'mode' : "number+delta+gauge"}]
+                            }})
+    return fig
 
 @app.callback(
     Output('graphe','figure'),
