@@ -305,7 +305,7 @@ def indicateur(hourly):
 
     fig.add_trace(go.Indicator(
         mode = "gauge+number",
-        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'humidity'].values[0],
+        value = df.loc[(df["dt"]==df.iloc[0]['dt']),'humidity'].values[0],
         number = {'suffix': "%"},
         title = {'text': "Humidité"},
         gauge = {
@@ -314,7 +314,7 @@ def indicateur(hourly):
 
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'temp'].values[0],
+        value = df.loc[(df["dt"]==df.iloc[0]['dt']),'temp'].values[0],
         title = {'text': "Température actuelle"},
         number = {'suffix': "°C"},
         #domain = {'x': [0.05, 0.5], 'y': [0.15, 0.35]}))
@@ -322,14 +322,14 @@ def indicateur(hourly):
 
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'wind_speed'].values[0],
+        value = df.loc[(df["dt"]==df.iloc[0]['dt']),'wind_speed'].values[0],
         number = {'suffix': " Km/h"},
         title = {'text': "Vitesse du vent"},
         domain = {'row': 0, 'column': 1}))
 
     fig.add_trace(go.Indicator(
          mode = "number+delta",
-        value = df.loc[(df["dt"]=='2021-06-11T22:00:00.000Z'),'temp'].values[0],
+        value = df.loc[(df["dt"]==df.iloc[0]['dt']),'temp'].values[0],
         title = {'text': "Ressenti"},
         number = {'suffix': "°C"},
         domain = {'row': 1, 'column': 1}))

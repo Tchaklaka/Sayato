@@ -190,7 +190,8 @@ fig = go.Figure()
 
 fig = go.Figure(go.Indicator(
     mode = "number+delta",
-    value = df.loc[df["dt"]=='2021-06-11T15:00:00.000Z','wind_speed'].values[0],
+    #value = df.loc[df["dt"]=='2021-06-11T15:00:00.000Z','wind_speed'].values[0],
+    value=df.iloc[0]['dt'],
     title = {'text': "Speed km/h"},
     domain = {'x': [0, 1], 'y': [0, 1]}
 ))
