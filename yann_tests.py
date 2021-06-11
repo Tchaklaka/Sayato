@@ -238,14 +238,14 @@ app.layout = html.Div([
 
     html.Div([
         dcc.Interval(
-            id='interval-component-60s',
-            interval=60 * 1000,
+            id='interval-component-300s',
+            interval=300 * 1000,
             n_intervals=0
         ),
 
         dcc.Interval(
-            id='interval-component-10s',
-            interval=10 * 1000,
+            id='interval-component-120s',
+            interval=120 * 1000,
             n_intervals=0
         ),
         
@@ -285,7 +285,7 @@ def test_interactions(capitale_data, current, hourly):
         Output('hourly', 'data')
     ],
     [
-        Input('interval-component-10s', 'n_intervals'),
+        Input('interval-component-120s', 'n_intervals'),
         Input('capitale', 'data')
     ]
 )
@@ -322,13 +322,13 @@ def store_click_data(capitale_data):
     Output('mapmonde', 'figure'),
     [
         Input('capitale', 'data'),
-        Input('interval-component-60s', 'n_intervals'),
+        Input('interval-component-300s', 'n_intervals'),
         Input('layers-dropdown', 'value')
     ],
     State('mapmonde', 'figure')
 )
 def update_map(capitale_data, _, selected_layer, fig_json):
-    """Mise à jour de la carte : coloration de la ville cliquée, et mise à jour de la couche météo selon les choix de l'utilisateur et un compteur de minutes"""
+    """Mise à jour de la carte : coloration de la ville cliquée, et mise à jour de la couche météo selon les choix de l'utilisateur et un compteur d'intervalles"""
 
     fig = go.Figure(fig_json)
     color_capital_map(fig, capitale_data)
