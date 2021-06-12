@@ -175,6 +175,9 @@ app = dash.Dash(
 app.layout = html.Div([
     html.Div([
         html.Div([
+        ], className="col-1"),
+
+        html.Div([
             html.Div([
                 html.Div([
                     html.Div([
@@ -186,22 +189,26 @@ app.layout = html.Div([
                             html.Div([
                                 html.Div([
                                     html.Div([
-                                        html.Label("Carte", className="h4")
-                                    ], className='col-12')
-                                ], className='row'),
+                                        html.Div([
+                                            html.Div([
+                                                html.Label("Carte", className="h4")
+                                            ], className='col-12')
+                                        ], className='row'),
 
-                                html.Div([
-                                    html.Div([
-                                        dcc.Dropdown(
-                                            options=[{'label': key, 'value': val} for key, val in layers.items()],
-                                            value=init_layer,
-                                            clearable=False,
-                                            id="layers-dropdown"
-                                        )
-                                    ], className='col-12')
-                                ], className='row')
-                            ], className='col-12')
-                        ], className='row')
+                                        html.Div([
+                                            html.Div([
+                                                dcc.Dropdown(
+                                                    options=[{'label': key, 'value': val} for key, val in layers.items()],
+                                                    value=init_layer,
+                                                    clearable=False,
+                                                    id="layers-dropdown"
+                                                )
+                                            ], className='col-12')
+                                        ], className='row')
+                                    ], className='container-sm')
+                                ], className='col-12')
+                            ], className='row')
+                        ], className='container-sm')
                     ], className='col-3 bg-info')
                 ], className='row'),
 
@@ -217,23 +224,31 @@ app.layout = html.Div([
                     html.Div([
                         html.Div([
                             html.Div([
-                                html.H2("Test")
+                                html.Div([
+                                    html.H2("Test")
+                                ], className='col-12')
                             ], className='row'),
 
                             html.Div([
-                                html.Pre(
-                                    id='test',
-                                    className="pre",
-                                    style={"overflowX": "scroll"}
-                            )], className='row')
-                        ], className='container')
+                                html.Div([
+                                    html.Pre(
+                                        id='test',
+                                        className="pre",
+                                        style={"overflowX": "scroll"}
+                                    )
+                                ], className='col-12')
+                            ], className='row')
+                        ], className='container-sm')
                     ], className='col-6'),
 
                     html.Div([
                     ], className='col-6')
                 ], className='row bg-light')
-            ], className='container')
-        ], className="col-12")
+            ], className='container-fluid')
+        ], className="col-10"),
+        
+        html.Div([
+        ], className="col-1")
     ], className="row"),
 
     html.Div([
@@ -255,7 +270,7 @@ app.layout = html.Div([
         
         dcc.Store(id='hourly')
     ], className='row')
-], className="container")
+], className="container-fluid")
 
 @app.callback(
     Output('test', 'children'),
