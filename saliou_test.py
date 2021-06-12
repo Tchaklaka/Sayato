@@ -112,6 +112,7 @@ import plotly.graph_objects as go
 
 import pandas as pd
 df = pd.read_csv("data_test/hourly.csv",index_col=0)
+df=pd.DataFrame(df)
 df.head()
 
 
@@ -188,8 +189,9 @@ import plotly.graph_objects as go
 fig = go.Figure()
 
 fig = go.Figure(go.Indicator(
-    mode = "gauge+number",
-    value = df.loc[(df["dt"]=='2021-06-10 09:00:00'),'wind_speed'].values[0],
+    mode = "number+delta",
+    #value = df.loc[df["dt"]=='2021-06-11T15:00:00.000Z','wind_speed'].values[0],
+    value=df.iloc[0]['dt'],
     title = {'text': "Speed km/h"},
     domain = {'x': [0, 1], 'y': [0, 1]}
 ))
