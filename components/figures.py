@@ -108,7 +108,7 @@ def create_indicateur(current: pd.Series):
     # Chiffre de la température ressentie
     fig.add_trace(go.Indicator(
         mode="number+delta",
-        value=current['temp'],
+        value=current['feels_like'],
         title={'text': "Température ressentie"},
         number={'suffix': " °C"},
         domain={'row': 1, 'column': 1})
