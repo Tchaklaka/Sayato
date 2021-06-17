@@ -33,7 +33,7 @@ scatter_mapbox_marker_color = config['scatter_mapbox_style']['marker_color']
 scatter_mapbox_marker_color_selected = config['scatter_mapbox_style']['marker_color_selected']
 
 # Ressource : liste des capitales mondiales avec leurs coordonnées
-capitals = pd.read_csv("concap.csv").dropna().reset_index(drop=True)
+capitals = pd.read_csv("data/concap.csv").dropna().reset_index(drop=True)
 
 # Serveur
 app = dash.Dash(
