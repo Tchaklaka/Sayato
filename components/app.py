@@ -6,7 +6,7 @@ import dash
 # Serveur
 app = dash.Dash(
     __name__,
-    assets_folder="assets",
+    assets_folder="../assets",
     external_stylesheets=[
         "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     ],
