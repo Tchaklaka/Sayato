@@ -43,9 +43,7 @@ def get_weather_results(lat: float, lon: float, one_call_api_base_url: str, api_
     # Lecture de la réponse, mise en forme des résultats en cas de succès
     if response.get('cod') and response.get('cod') == 429:
         raise Exception("Compte OpenWeather bloqué : trop d'appels API effectués ?")
-    else:
-        weather_dict = response
-    current = get_current_weather_results(weather_dict)
-    hourly = get_hourly_weather_results(weather_dict)
+    current = get_current_weather_results(response)
+    hourly = get_hourly_weather_results(response)
 
     return current, hourly
