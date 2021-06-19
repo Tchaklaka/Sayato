@@ -5,6 +5,7 @@ import os
 import pandas as pd
 
 
+# Emplacement du répertoire racine du projet
 root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 # Ressource : liste des capitales mondiales avec leurs coordonnées

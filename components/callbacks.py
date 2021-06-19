@@ -29,6 +29,7 @@ from .figures import color_capital_map, create_indicateur, create_serie_temp, cr
 def stream_data(n_intervals, capitale_data):
     """Appels API récurrents pour obtenir les dernières données météo ponctuelles"""
 
+    # Requêtage de l'API et mise en forme des résultats en sortie
     capitale_data = json.loads(capitale_data)
     current, hourly = get_weather_results(
         capitale_data['CapitalLatitude'],
@@ -52,10 +53,12 @@ def store_click_data(capitale_data):
     """Callback intermédiaire sauvegardant la ville cliquée sur le navigateur du client"""
 
     if capitale_data:
+        # Capitale sélectionnée par clic de l'utilisateur
         capital_name = capitale_data['points'][0]['hovertext']
         capitale_data = capitals.set_index('CapitalName').loc[capital_name,:].to_dict()
         capitale_data['CapitalName'] = capital_name
     else:
+        # Capitale sélectionnée au départ par défaut : la première du tableau des capitales
         capitale_data = capitals.iloc[0].to_dict()
         capital_name = capitale_data['CapitalName']
 
@@ -73,8 +76,10 @@ def store_click_data(capitale_data):
 def update_map(capitale_data, _, selected_layer, fig_json):
     """Mise à jour de la carte : coloration de la ville cliquée, et mise à jour de la couche météo selon les choix de l'utilisateur et un compteur d'intervalles"""
 
+    # Récupération des données sur la capitale sélectionnée
     capitale_data = json.loads(capitale_data)
 
+    # Récupération du graphique et mise à jour
     fig = go.Figure(fig_json)
     color_capital_map(
         fig,
@@ -94,6 +99,7 @@ def update_map(capitale_data, _, selected_layer, fig_json):
 def indicateur(current):
     """Mise à jour des indicateurs pour les données courantes"""
 
+    # Construction de la série correspondant aux données actuelles
     series_current = pd.Series(json.loads(current, object_hook=json_util.object_hook))
 
     return create_indicateur(series_current)
@@ -108,9 +114,11 @@ def indicateur(current):
 def serie_temp(hourly, variable_selected):
     """Mise à jour du graphique des prévisions pour la variable sélectionnée"""
 
+    # Construction du DataFrame correspondant aux prévisions
     hourly_df = pd.DataFrame(json.loads(hourly, object_hook=json_util.object_hook))
     hourly_df.loc[:,'dt'] = pd.to_datetime(hourly_df['dt'])
 
+    # Noms de la variable sélectionnée
     variable_label = {v: k for k, v in variables.items()}[variable_selected]
 
     return create_serie_temp(hourly_df, variable_selected, variable_label)
@@ -122,7 +130,9 @@ def serie_temp(hourly, variable_selected):
 def tab(hourly):
     """Mise à jour du tableau des prévisions"""
 
+    # Construction du DataFrame correspondant aux prévisions
     hourly_df = pd.DataFrame(json.loads(hourly, object_hook=json_util.object_hook))
+    # Mise en forme des dates au format français
     hourly_df.loc[:,'dt'] = pd.to_datetime(hourly_df['dt'])
     hourly_df.loc[:,'dt'] = hourly_df['dt'].apply(lambda d: format_datetime(d, "EEE H", locale="fr")) + "h"
 

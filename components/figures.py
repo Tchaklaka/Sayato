@@ -75,6 +75,8 @@ def create_map(capitals_df: pd.DataFrame, selected_layer: str, weather_tile_api_
     return fig
 
 def create_indicateur(current: pd.Series):
+    """Création des visuels de la section des indicateurs"""
+
     fig = go.Figure()
 
     # Jauge de température
@@ -135,6 +137,8 @@ def create_indicateur(current: pd.Series):
     return fig
 
 def create_serie_temp(df: pd.DataFrame, variable_name: str, variable_label: str):
+    """Création du graphique contenant la courbe des prévisions pour la variable sélectionnée"""
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -159,6 +163,8 @@ def create_serie_temp(df: pd.DataFrame, variable_name: str, variable_label: str)
     return fig
 
 def create_table(df: pd.DataFrame, datetime_label: str, variables_dic: dict[str, str]):
+    """Création du tableau des prévisions"""
+
     fig = go.Figure(
         data=[
             go.Table(
