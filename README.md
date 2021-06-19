@@ -3,7 +3,6 @@ toc: true
 layout: post
 description: Présentation de notre projet.
 categories: [markdown]
-title: Le bulletin météo de SAYATO (Saliou,Yann,Thomas G)
 ---
 
 # Un projet pour faire la pluie et le beau temps 
